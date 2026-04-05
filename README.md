@@ -1,11 +1,11 @@
-# 💰 Finance Data Processing and Access Control Backend
+# Finance Data Processing and Access Control Backend
 
 > A production-structured backend system for a finance dashboard supporting role-based access control, financial record management, and summary-level analytics.
 > Built as part of the **Zorvyn FinTech Backend Developer Intern** assessment.
 
 ---
 
-## 📌 Overview
+##  Overview
 
 This project is a RESTful backend API that powers a **multi-role finance dashboard**. It enables different types of users — Admins, Analysts, and Viewers — to interact with financial data based on their assigned permissions.
 
@@ -17,7 +17,7 @@ The system is designed with a focus on:
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -32,7 +32,7 @@ The system is designed with a focus on:
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 finance-backend/
@@ -80,7 +80,7 @@ finance-backend/
 
 ---
 
-## ⚙️ Setup Instructions
+##  Setup Instructions
 
 ### Prerequisites
 - Node.js v18+
@@ -109,7 +109,7 @@ npm start
 
 ---
 
-## 🔑 Environment Variables
+##  Environment Variables
 
 Create a `.env` file in the root directory with the following:
 
@@ -128,7 +128,7 @@ JWT_EXPIRES_IN=7d
 
 ---
 
-## 🔐 Authentication
+##  Authentication
 
 This system uses **JWT (JSON Web Token)** based stateless authentication.
 
@@ -143,7 +143,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## 👥 Roles and Permissions
+##  Roles and Permissions
 
 The system supports three roles with clearly defined access levels:
 
@@ -159,9 +159,9 @@ The system supports three roles with clearly defined access levels:
 
 ---
 
-## 📋 API Endpoints
+##  API Endpoints
 
-### 🔓 Auth Routes (Public)
+###  Auth Routes (Public)
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -170,7 +170,7 @@ The system supports three roles with clearly defined access levels:
 
 ---
 
-### 👤 User Routes (Admin Only)
+###  User Routes (Admin Only)
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -182,7 +182,7 @@ The system supports three roles with clearly defined access levels:
 
 ---
 
-### 💳 Financial Record Routes
+###  Financial Record Routes
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
@@ -205,7 +205,7 @@ The system supports three roles with clearly defined access levels:
 
 ---
 
-### 📊 Dashboard Routes (Analyst and Admin Only)
+###  Dashboard Routes (Analyst and Admin Only)
 
 | Method | Endpoint | Description |
 |---|---|---|
@@ -216,7 +216,7 @@ The system supports three roles with clearly defined access levels:
 
 ---
 
-## 📨 Request & Response Examples
+##  Request & Response Examples
 
 ### Register User
 
@@ -318,7 +318,7 @@ Authorization: Bearer <analyst_or_admin_token>
 
 ---
 
-## 🔒 Access Control Implementation
+##  Access Control Implementation
 
 RBAC is implemented using a two-layer middleware approach:
 
@@ -341,7 +341,7 @@ router.get("/records", protect, authorize("viewer", "analyst", "admin"), getAll)
 
 ---
 
-## 🗄 Data Models
+##  Data Models
 
 ### User Model
 
@@ -371,7 +371,7 @@ router.get("/records", protect, authorize("viewer", "analyst", "admin"), getAll)
 
 ---
 
-## 📊 Dashboard Aggregations
+##  Dashboard Aggregations
 
 All dashboard endpoints use **MongoDB aggregation pipelines** for efficient data processing:
 
@@ -384,7 +384,7 @@ All dashboard endpoints use **MongoDB aggregation pipelines** for efficient data
 
 ---
 
-## ✅ Assumptions Made
+##  Assumptions Made
 
 1. **Role assignment at registration** — Users can self-assign a role during registration for easier testing. In a real production system, only admins would assign roles after account creation.
 2. **Soft delete for records only** — Financial records are soft deleted to preserve audit history. Users are hard deleted since permanent removal of user data is the expected behavior.
@@ -394,7 +394,7 @@ All dashboard endpoints use **MongoDB aggregation pipelines** for efficient data
 
 ---
 
-## ⚖️ Tradeoffs Considered
+##  Tradeoffs Considered
 
 | Design Decision | Tradeoff |
 |---|---|
@@ -407,7 +407,7 @@ All dashboard endpoints use **MongoDB aggregation pipelines** for efficient data
 
 ---
 
-## 🧠 Design Decisions
+##  Design Decisions
 
 These are the key intentional architectural choices made in this project:
 
@@ -425,7 +425,7 @@ These are the key intentional architectural choices made in this project:
 
 ---
 
-## 🚀 Future Improvements
+##  Future Improvements
 
 - [ ] Email verification on registration
 - [ ] Token blacklisting for secure logout
@@ -438,7 +438,7 @@ These are the key intentional architectural choices made in this project:
 
 ---
 
-## 👨‍💻 Author
+##  Author
 
 **Nikhil Seelam**
 - GitHub: [Nikhilseelam1](https://github.com/Nikhilseelam1)
