@@ -107,15 +107,15 @@ npm start
 Create a `.env` file in the root directory with the following:
 
 ```env
-# Server
+
 PORT=5000
+
 NODE_ENV=development
 
-# MongoDB
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/finance-backend
 
-# JWT
 JWT_SECRET=your_super_secret_key_here
+
 JWT_EXPIRES_IN=7d
 ```
 
