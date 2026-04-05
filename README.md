@@ -90,12 +90,12 @@ finance-backend/
 
 ```bash
 git clone https://github.com/Nikhilseelam1/FInance-Backend-Project.git
+
 cd FInance-Backend-Project
 
 npm install
 
 cp .env.example .env
-# Edit .env and fill in your actual values
 
 npm run dev
 
