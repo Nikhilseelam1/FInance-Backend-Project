@@ -1,7 +1,6 @@
 # Finance Data Processing and Access Control Backend
 
 > A production-structured backend system for a finance dashboard supporting role-based access control, financial record management, and summary-level analytics.
-> Built as part of the **Zorvyn FinTech Backend Developer Intern** assessment.
 
 ---
 
