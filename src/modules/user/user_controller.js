@@ -11,7 +11,7 @@ const getUsers = async (req, res, next) => {
     const users = await getAllUsers();
     return res
       .status(200)
-      .json(new ApiResponse(200, "Users fetched successfully", users));
+      .json(new ApiResponse(200, "users fetched successfully", users));
   } catch (error) {
     next(error);
   }
@@ -22,7 +22,7 @@ const getUser = async (req, res, next) => {
     const user = await getUserById(req.params.id);
     return res
       .status(200)
-      .json(new ApiResponse(200, "User fetched successfully", user));
+      .json(new ApiResponse(200, "user fetched successfully", user));
   } catch (error) {
     next(error);
   }
@@ -37,7 +37,7 @@ const updateRole = async (req, res, next) => {
     );
     return res
       .status(200)
-      .json(new ApiResponse(200, "User role updated successfully", user));
+      .json(new ApiResponse(200, "user role updated successfully", user));
   } catch (error) {
     next(error);
   }
@@ -52,7 +52,7 @@ const updateStatus = async (req, res, next) => {
     );
     return res
       .status(200)
-      .json(new ApiResponse(200, "User status updated successfully", user));
+      .json(new ApiResponse(200, "user status updated successfully", user));
   } catch (error) {
     next(error);
   }

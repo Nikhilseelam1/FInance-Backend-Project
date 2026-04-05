@@ -6,7 +6,7 @@ const register = async (req, res, next) => {
     const result = await registerUser(req.body);
     return res
       .status(201)
-      .json(new ApiResponse(201, "User registered successfully", result));
+      .json(new ApiResponse(201, "user registered successfully", result));
   } catch (error) {
     next(error);
   }
@@ -17,7 +17,7 @@ const login = async (req, res, next) => {
     const result = await loginUser(req.body);
     return res
       .status(200)
-      .json(new ApiResponse(200, "Login successful", result));
+      .json(new ApiResponse(200, "login successful", result));
   } catch (error) {
     next(error);
   }

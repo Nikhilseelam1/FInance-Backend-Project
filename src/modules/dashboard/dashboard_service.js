@@ -1,6 +1,5 @@
 const FinancialRecord = require("../../models/FinancialRecord");
 
-// Total income, expenses and net balance
 const getSummary = async () => {
   const result = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
@@ -19,7 +18,6 @@ const getSummary = async () => {
   return { income, expenses, netBalance };
 };
 
-// Totals grouped by category
 const getCategoryWise = async () => {
   const result = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
@@ -41,7 +39,6 @@ const getCategoryWise = async () => {
   }));
 };
 
-// Monthly trends
 const getMonthlyTrends = async () => {
   const result = await FinancialRecord.aggregate([
     { $match: { isDeleted: false } },
@@ -69,7 +66,6 @@ const getMonthlyTrends = async () => {
   }));
 };
 
-// Recent 10 transactions
 const getRecentActivity = async () => {
   const records = await FinancialRecord.find()
     .populate("createdBy", "name email")

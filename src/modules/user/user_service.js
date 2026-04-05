@@ -1,13 +1,11 @@
 const User = require("../../models/User");
 const ApiError = require("../../utils/ApiError");
 
-// Get all users
 const getAllUsers = async () => {
   const users = await User.find().select("-__v");
   return users;
 };
 
-// Get single user
 const getUserById = async (id) => {
   const user = await User.findById(id).select("-__v");
   if (!user) {
@@ -16,9 +14,7 @@ const getUserById = async (id) => {
   return user;
 };
 
-// Update user role
 const updateUserRole = async (id, role, requestingUserId) => {
-  // Prevent admin from changing their own role
   if (id === requestingUserId.toString()) {
     throw new ApiError(400, "You cannot change your own role");
   }
@@ -36,9 +32,7 @@ const updateUserRole = async (id, role, requestingUserId) => {
   return user;
 };
 
-// Update user status
 const updateUserStatus = async (id, status, requestingUserId) => {
-  // Prevent admin from deactivating themselves
   if (id === requestingUserId.toString()) {
     throw new ApiError(400, "You cannot change your own status");
   }
@@ -56,9 +50,7 @@ const updateUserStatus = async (id, status, requestingUserId) => {
   return user;
 };
 
-// Delete user
 const deleteUser = async (id, requestingUserId) => {
-  // Prevent admin from deleting themselves
   if (id === requestingUserId.toString()) {
     throw new ApiError(400, "You cannot delete your own account");
   }

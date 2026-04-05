@@ -1,7 +1,6 @@
 const FinancialRecord = require("../../models/FinancialRecord");
 const ApiError = require("../../utils/ApiError");
 
-// Create a new record
 const createRecord = async (data, userId) => {
   const record = await FinancialRecord.create({
     ...data,
@@ -10,7 +9,6 @@ const createRecord = async (data, userId) => {
   return record;
 };
 
-// Get all records with filtering and pagination
 const getAllRecords = async (query) => {
   const {
     type,
@@ -21,7 +19,6 @@ const getAllRecords = async (query) => {
     limit = 10,
   } = query;
 
-  // Build filter object
   const filter = {};
 
   if (type) filter.type = type;
@@ -32,7 +29,6 @@ const getAllRecords = async (query) => {
     if (endDate) filter.date.$lte = new Date(endDate);
   }
 
-  // Pagination
   const skip = (Number(page) - 1) * Number(limit);
   const total = await FinancialRecord.countDocuments(filter);
   const records = await FinancialRecord.find(filter)
@@ -52,7 +48,6 @@ const getAllRecords = async (query) => {
   };
 };
 
-// Get single record
 const getRecordById = async (id) => {
   const record = await FinancialRecord.findById(id).populate(
     "createdBy",
@@ -64,7 +59,6 @@ const getRecordById = async (id) => {
   return record;
 };
 
-// Update record
 const updateRecord = async (id, data) => {
   const record = await FinancialRecord.findByIdAndUpdate(id, data, {
     new: true,
@@ -77,7 +71,6 @@ const updateRecord = async (id, data) => {
   return record;
 };
 
-// Soft delete record
 const deleteRecord = async (id) => {
   const record = await FinancialRecord.findByIdAndUpdate(
     id,

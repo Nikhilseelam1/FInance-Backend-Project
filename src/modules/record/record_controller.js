@@ -1,10 +1,4 @@
-const {
-  createRecord,
-  getAllRecords,
-  getRecordById,
-  updateRecord,
-  deleteRecord,
-} = require("./record_service");
+const {createRecord,getAllRecords,getRecordById,updateRecord,deleteRecord,} = require("./record_service");
 const ApiResponse = require("../../utils/ApiResponse");
 
 const create = async (req, res, next) => {
@@ -34,7 +28,7 @@ const getOne = async (req, res, next) => {
     const record = await getRecordById(req.params.id);
     return res
       .status(200)
-      .json(new ApiResponse(200, "Record fetched successfully", record));
+      .json(new ApiResponse(200, "record fetched successfully", record));
   } catch (error) {
     next(error);
   }
@@ -45,7 +39,7 @@ const update = async (req, res, next) => {
     const record = await updateRecord(req.params.id, req.body);
     return res
       .status(200)
-      .json(new ApiResponse(200, "Record updated successfully", record));
+      .json(new ApiResponse(200, "record updated successfully", record));
   } catch (error) {
     next(error);
   }
