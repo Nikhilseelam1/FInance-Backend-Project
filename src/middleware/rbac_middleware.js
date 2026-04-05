@@ -4,10 +4,9 @@ const authorize = (...roles) => {
   return (req, res, next) => {
     // protect middleware must run before this
     if (!req.user) {
-      return next(new ApiError(401, "Access denied. Not authenticated"));
+      return next(new ApiError(401, "access denied. not authenticated"));
     }
 
-    // Check if user's role is in the allowed roles
     if (!roles.includes(req.user.role)) {
       return next(
         new ApiError(
