@@ -89,21 +89,16 @@ finance-backend/
 ### Steps
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/Nikhilseelam1/FInance-Backend-Project.git
 cd FInance-Backend-Project
 
-# 2. Install dependencies
 npm install
 
-# 3. Setup environment variables
 cp .env.example .env
 # Edit .env and fill in your actual values
 
-# 4. Start development server
 npm run dev
 
-# 5. For production
 npm start
 ```
 
@@ -442,4 +437,3 @@ These are the key intentional architectural choices made in this project:
 
 **Nikhil Seelam**
 - GitHub: [Nikhilseelam1](https://github.com/Nikhilseelam1)
-- Assessment: Zorvyn FinTech — Backend Developer Intern
