@@ -9,7 +9,7 @@ const userRoutes = require("./src/modules/user/user_routes");
 const recordRoutes = require("./src/modules/record/record_routes");
 const dashboardRoutes = require("./src/modules/dashboard/dashboard_routes");
 
-const errorHandler = require("./src/middleware/errorHandler");
+const errorHandler = require("./src/middleware/ErrorHandler");
 
 const app = express();
 
