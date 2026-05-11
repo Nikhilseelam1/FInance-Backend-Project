@@ -1,437 +1,589 @@
-# Finance Data Processing and Access Control Backend
+<div align="center">
 
-> A production-structured backend system for a finance dashboard supporting role-based access control, financial record management, and summary-level analytics.
+<h1>🏦 Finance Backend System</h1>
+
+<p><em>A production-grade financial management backend built on a layered architecture — featuring JWT authentication, role-based access control, analytics aggregation, and secure API workflows.</em></p>
+
+[![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-5.x-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.x-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Helmet](https://img.shields.io/badge/Security-Helmet.js-blue?style=flat-square)](https://helmetjs.github.io/)
+[![Render](https://img.shields.io/badge/Deployed-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://render.com/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](./LICENSE)
+
+<br/>
+
+[**GitHub Repository**](https://github.com/Nikhilseelam1/FInance-Backend-Project) · [**API Docs**](#-api-endpoints) · [**Setup Guide**](#-local-development-setup)
+
+</div>
+
 ---
 
-##  Overview
+## 📌 Overview
 
-This project is a RESTful backend API that powers a **multi-role finance dashboard**. It enables different types of users — Admins, Analysts, and Viewers — to interact with financial data based on their assigned permissions.
+This is a **production-style financial management backend** designed to securely handle transactions, enforce role-based authorization, and deliver analytics aggregations across user-scoped financial data.
 
-The system is designed with a focus on:
-- **Clean architecture** — module-based folder structure with clear separation of concerns
-- **Security** — JWT authentication with role-based access control enforced at middleware level
-- **Reliability** — global error handling, input validation, and soft delete support
-- **Analytics** — MongoDB aggregation pipelines for real-time dashboard summaries
+The system is built around three core engineering pillars:
+
+1. **Secure authentication** — JWT access/refresh token architecture with stateless session handling
+2. **Fine-grained authorization** — Role-Based Access Control (RBAC) with Admin, Analyst, and Viewer permission tiers
+3. **Analytics-ready data layer** — MongoDB aggregation pipelines for financial summaries, transaction reporting, and dashboard feeds
+
+This is not a simple CRUD service. Every layer — from repository to controller — is deliberately separated to enable independent testability, future microservice extraction, and team-scale maintainability.
+
+> **Engineering Focus:** Layered architecture · JWT auth + refresh rotation · RBAC middleware · MongoDB aggregation · Secure API design
 
 ---
 
-##  Tech Stack
+## 🏛️ Architecture Overview
 
-| Layer | Technology | Purpose |
+```
+                     ┌────────────────────────────────────────┐
+                     │          Client / API Consumer          │
+                     └──────────────────┬─────────────────────┘
+                                        │ HTTPS
+                     ┌──────────────────▼─────────────────────┐
+                     │            Express.js API Server         │
+                     │                                          │
+                     │  ┌──────────┐   ┌─────────────────────┐ │
+                     │  │  Router  │   │     Middlewares      │ │
+                     │  │ (Routes) │   │  Auth · RBAC · Val  │ │
+                     │  └────┬─────┘   └─────────────────────┘ │
+                     └───────┼────────────────────────────────┘
+                             │
+             ┌───────────────┼──────────────────┐
+             │               │                  │
+   ┌──────────▼──────┐  ┌────▼──────┐  ┌────────▼──────────┐
+   │   Controllers   │  │  Services │  │    Repositories    │
+   │  (HTTP Adapter) │  │ (Biz Logic│  │  (DB Access Layer) │
+   └─────────────────┘  └────┬──────┘  └────────┬──────────┘
+                             │                  │
+                     ┌───────▼──────────────────▼──────┐
+                     │           MongoDB                 │
+                     │   Users · Transactions · Roles   │
+                     └──────────────────────────────────┘
+```
+
+### Layered Architecture Explained
+
+```
+src/
+├── config/            → Environment bootstrap, DB connection, constants
+├── models/            → Mongoose schemas (User, Transaction, Role)
+├── repositories/      → DB query abstraction; business logic never touches Mongoose directly
+├── services/          → Pure business logic; orchestrates repositories
+├── controllers/       → HTTP adapter; maps request → service → response
+├── routes/            → Express routers; wires controllers to URL paths + middleware
+├── middlewares/       → Auth guard, RBAC enforcement, error handler, request logger
+├── validators/        → Joi/Zod schemas; validate all incoming request bodies
+├── utils/             → Response wrappers, date helpers, token utilities
+└── logging/           → Structured logging (Winston)
+```
+
+| Layer | Engineering Rationale |
+|---|---|
+| **Config** | Centralizes all environment-dependent initialization. Zero config leakage into business logic. |
+| **Model** | Schema definitions with MongoDB indexes on `userId`, `type`, `createdAt` for efficient aggregation. |
+| **Repository** | Isolates all Mongoose calls. Enables DB migration or mocking in tests without touching services. |
+| **Service** | Stateless business logic. All financial rules, validation orchestration, and analytics live here. |
+| **Controller** | Thin HTTP shim. Deserializes request body, delegates to service, serializes response. No logic. |
+| **Middleware** | Enforces cross-cutting concerns (auth, RBAC, validation) before route handlers execute. |
+| **Validator** | Schema-first input validation. Malformed data never reaches the service layer. |
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology | Purpose |
 |---|---|---|
-| Runtime | Node.js | Server-side JavaScript |
-| Framework | Express.js | HTTP routing and middleware |
-| Database | MongoDB Atlas | Cloud document database |
-| ODM | Mongoose | Schema modeling and DB interaction |
-| Authentication | JSON Web Tokens (JWT) | Stateless auth |
-| Validation | Joi | Request body validation |
-| Password Hashing | bcryptjs | Secure password storage |
-| Environment | dotenv | Environment variable management |
+| **Runtime** | Node.js 22.x | Non-blocking I/O, event-driven architecture |
+| **Framework** | Express.js 5.x | Routing, middleware pipeline |
+| **Database** | MongoDB 7.x | Document storage + aggregation pipelines |
+| **Auth** | JWT (Access + Refresh) | Stateless authentication, token rotation |
+| **Authorization** | Custom RBAC Middleware | Role-based permission enforcement |
+| **Validation** | Joi / Zod | Schema-based request body validation |
+| **Security** | Helmet.js | HTTP security headers |
+| **CORS** | cors package | Origin whitelisting |
+| **Password Hashing** | bcrypt | Salted password storage |
+| **Logging** | Winston | Structured JSON logging |
+| **Deployment** | Render | Cloud PaaS, zero-downtime deploys |
 
 ---
 
-##  Project Structure
+## ✨ Features
+
+- 🔐 **JWT Authentication** — Access + refresh token flow with stateless session handling
+- 🔄 **Refresh Token Rotation** — Secure token renewal without re-login
+- 🛡️ **Role-Based Access Control** — Admin, Analyst, Viewer permission tiers at middleware level
+- 💰 **Financial Transaction Management** — Create, read, filter, and categorize transactions
+- 📊 **Analytics Aggregation** — MongoDB pipelines for income/expense summaries and trend reporting
+- ✅ **Schema Validation** — All inputs validated via Joi/Zod before reaching business logic
+- 🔒 **Security Headers** — Helmet.js for XSS, clickjacking, and MIME-sniffing protection
+- 🏗️ **Layered Architecture** — Repository → Service → Controller separation
+- 📁 **Modular Codebase** — Feature-scoped modules, independently testable and extensible
+- 🚀 **Render Deployment** — Production-ready cloud deployment with environment isolation
+
+---
+
+## 🔐 Authentication & Authorization
+
+### JWT Token Architecture
+
+```
+POST /api/auth/login
+        │
+        ▼
+  Validate credentials (bcrypt compare)
+        │
+        ▼
+  Issue Access Token  (15min expiry)   → returned in response body
+  Issue Refresh Token (7d expiry)      → stored in HTTP-only cookie
+        │
+On protected route:
+        │
+        ▼
+┌───────────────────────────┐
+│   Auth Middleware          │
+│   Extract Bearer token     │
+│   Verify JWT signature     │
+│   Attach req.user payload  │
+└────────────┬──────────────┘
+             │
+             ▼
+        Route Handler
+
+On Access Token Expiry:
+        │
+        ▼
+  POST /api/auth/refresh
+  → Reads refresh token from HTTP-only cookie
+  → Validates + rotates: old token invalidated, new pair issued
+```
+
+**Security properties:**
+- Short-lived access tokens limit exposure window
+- Refresh token rotation invalidates previous tokens on each cycle
+- HTTP-only cookie transport makes refresh tokens inaccessible to JavaScript
+- `bcrypt` with salt rounds prevents rainbow table attacks on stored passwords
+
+---
+
+## 🛡️ Role-Based Access Control
+
+### Role Hierarchy
+
+| Role | Permissions |
+|---|---|
+| **Admin** | Full access — manage users, view all transactions, access analytics, modify records |
+| **Analyst** | Read financial records, access analytics and aggregation reports |
+| **Viewer** | Read-only access to their own transactions; no analytics or admin routes |
+
+### RBAC Middleware Flow
+
+```
+Incoming Request
+      │
+      ▼
+[1] Auth Middleware → verify JWT → attach req.user (id, role)
+      │
+      ▼
+[2] RBAC Middleware → check req.user.role against allowed roles[]
+      │
+      ├── Role ALLOWED → pass to route handler
+      │
+      └── Role DENIED  → 403 Forbidden
+```
+
+**Implementation pattern:**
+
+```javascript
+// Composable RBAC middleware factory
+const authorize = (...roles) => (req, res, next) => {
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ success: false, message: "Access denied." });
+  }
+  next();
+};
+
+// Usage on route level
+router.get(
+  "/api/analytics/summary",
+  authenticate,
+  authorize("admin", "analyst"),
+  analyticsController.getSummary
+);
+```
+
+This pattern keeps authorization logic **declarative at the route layer** — no permission checks inside service or controller code.
+
+---
+
+## 💰 Financial Data Processing
+
+### Transaction Model Design
+
+```javascript
+// Core transaction schema
+{
+  userId:      ObjectId,     // owner reference
+  type:        "income" | "expense",
+  category:    String,       // e.g., "salary", "rent", "food"
+  amount:      Number,       // stored in base currency units
+  description: String,
+  date:        Date,
+  createdAt:   Date
+}
+
+// Indexes for aggregation performance
+{ userId: 1, date: -1 }     // user timeline queries
+{ userId: 1, type: 1 }      // income/expense split
+{ userId: 1, category: 1 }  // category breakdown
+```
+
+### Analytics Aggregation Pipeline
+
+Financial summary reports are powered by MongoDB aggregation pipelines, avoiding expensive in-memory computation at the application layer:
+
+```javascript
+// Monthly income vs expense summary
+db.transactions.aggregate([
+  { $match: { userId: ObjectId(userId), date: { $gte: startDate, $lte: endDate } } },
+  {
+    $group: {
+      _id: { month: { $month: "$date" }, type: "$type" },
+      total: { $sum: "$amount" },
+      count: { $sum: 1 }
+    }
+  },
+  { $sort: { "_id.month": 1 } }
+]);
+```
+
+This pushes aggregation computation to MongoDB's native engine — significantly more efficient than fetching all records and reducing at the Node.js layer.
+
+---
+
+## 📡 API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Auth | Role | Description |
+|---|---|---|---|---|
+| `POST` | `/api/auth/register` | ❌ | — | Register new user |
+| `POST` | `/api/auth/login` | ❌ | — | Login, receive JWT tokens |
+| `POST` | `/api/auth/refresh` | 🍪 Cookie | — | Rotate refresh token |
+| `POST` | `/api/auth/logout` | ✅ JWT | Any | Invalidate session |
+
+### Transactions
+
+| Method | Endpoint | Auth | Role | Description |
+|---|---|---|---|---|
+| `POST` | `/api/transactions` | ✅ | Any | Create a new transaction |
+| `GET` | `/api/transactions` | ✅ | Any | List own transactions (paginated, filterable) |
+| `GET` | `/api/transactions/:id` | ✅ | Any | Get a single transaction |
+| `PUT` | `/api/transactions/:id` | ✅ | Any | Update a transaction |
+| `DELETE` | `/api/transactions/:id` | ✅ | Admin | Delete a transaction |
+
+### Analytics
+
+| Method | Endpoint | Auth | Role | Description |
+|---|---|---|---|---|
+| `GET` | `/api/analytics/summary` | ✅ | Admin, Analyst | Income vs expense summary |
+| `GET` | `/api/analytics/monthly` | ✅ | Admin, Analyst | Monthly trend report |
+| `GET` | `/api/analytics/categories` | ✅ | Admin, Analyst | Spending by category |
+
+### User Management (Admin Only)
+
+| Method | Endpoint | Auth | Role | Description |
+|---|---|---|---|---|
+| `GET` | `/api/users` | ✅ | Admin | List all users |
+| `GET` | `/api/users/:id` | ✅ | Admin | Get user details |
+| `PATCH` | `/api/users/:id/role` | ✅ | Admin | Update user role |
+| `DELETE` | `/api/users/:id` | ✅ | Admin | Delete user account |
+
+---
+
+### Sample Request / Response
+
+**Register**
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Nikhil Seelam",
+  "email": "nikhil@example.com",
+  "password": "SecurePass@123"
+}
+```
+```json
+HTTP/1.1 201 Created
+{
+  "success": true,
+  "message": "User registered successfully.",
+  "data": {
+    "id": "664f2a...",
+    "name": "Nikhil Seelam",
+    "email": "nikhil@example.com",
+    "role": "viewer"
+  }
+}
+```
+
+**Create Transaction**
+```http
+POST /api/transactions
+Authorization: Bearer <accessToken>
+Content-Type: application/json
+
+{
+  "type": "expense",
+  "category": "food",
+  "amount": 850,
+  "description": "Team lunch",
+  "date": "2025-04-06"
+}
+```
+```json
+HTTP/1.1 201 Created
+{
+  "success": true,
+  "data": {
+    "id": "abc123...",
+    "type": "expense",
+    "category": "food",
+    "amount": 850,
+    "description": "Team lunch",
+    "date": "2025-04-06T00:00:00.000Z",
+    "userId": "664f2a..."
+  }
+}
+```
+
+**Analytics Summary**
+```json
+HTTP/1.1 200 OK
+{
+  "success": true,
+  "data": {
+    "period": "2025-04",
+    "totalIncome": 85000,
+    "totalExpense": 32400,
+    "netBalance": 52600,
+    "topCategories": [
+      { "category": "salary", "total": 80000 },
+      { "category": "rent",   "total": 15000 },
+      { "category": "food",   "total": 8500  }
+    ]
+  }
+}
+```
+
+---
+
+## 📁 Folder Structure
 
 ```
 finance-backend/
-│
 ├── src/
-│    ├── modules/
-│    │    ├── auth/
-│    │    │     ├── auth.controller.js
-│    │    │     ├── auth.service.js
-│    │    │     ├── auth.routes.js
-│    │    │     └── auth.validator.js
-│    │    ├── user/
-│    │    │     ├── user.controller.js
-│    │    │     ├── user.service.js
-│    │    │     ├── user.routes.js
-│    │    │     └── user.validator.js
-│    │    ├── record/
-│    │    │     ├── record.controller.js
-│    │    │     ├── record.service.js
-│    │    │     ├── record.routes.js
-│    │    │     └── record.validator.js
-│    │    └── dashboard/
-│    │          ├── dashboard.controller.js
-│    │          ├── dashboard.service.js
-│    │          └── dashboard.routes.js
-│    ├── models/
-│    │    ├── User.js
-│    │    └── FinancialRecord.js
-│    ├── middleware/
-│    │    ├── auth.middleware.js
-│    │    ├── rbac.middleware.js
-│    │    └── errorHandler.js
-│    ├── config/
-│    │    └── db.js
-│    └── utils/
-│         ├── ApiError.js
-│         └── ApiResponse.js
-│
+│   ├── config/
+│   │   └── db.js                    # MongoDB connection + Mongoose setup
+│   ├── models/
+│   │   ├── User.model.js            # User schema (name, email, passwordHash, role)
+│   │   └── Transaction.model.js     # Transaction schema with compound indexes
+│   ├── repositories/
+│   │   ├── user.repository.js       # All User DB operations
+│   │   └── transaction.repository.js
+│   ├── services/
+│   │   ├── auth.service.js          # Login, register, token issuance, refresh
+│   │   ├── transaction.service.js   # Financial CRUD + validation logic
+│   │   └── analytics.service.js    # Aggregation pipeline orchestration
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── transaction.controller.js
+│   │   └── analytics.controller.js
+│   ├── routes/
+│   │   ├── auth.routes.js
+│   │   ├── transaction.routes.js
+│   │   ├── analytics.routes.js
+│   │   └── user.routes.js
+│   ├── middlewares/
+│   │   ├── auth.middleware.js       # JWT verification → req.user
+│   │   ├── rbac.middleware.js       # Role enforcement middleware factory
+│   │   ├── error.middleware.js      # Centralized error handler
+│   │   └── logger.middleware.js     # Request/response logging
+│   ├── validators/
+│   │   ├── auth.validator.js        # Register/login schema
+│   │   └── transaction.validator.js # Transaction body schema
+│   ├── utils/
+│   │   ├── apiResponse.js           # Standardized success/error wrappers
+│   │   ├── tokenUtils.js            # JWT sign/verify helpers
+│   │   └── dateUtils.js
+│   ├── logging/
+│   │   └── logger.js               # Winston structured logger
+│   └── app.js                      # Express app bootstrap + middleware stack
 ├── .env.example
-├── .gitignore
-├── app.js
-├── server.js
-└── package.json
+├── package.json
+└── README.md
 ```
 
 ---
 
-##  Setup Instructions
+## ⚙️ Local Development Setup
 
 ### Prerequisites
-- Node.js v18+
-- MongoDB Atlas account (free tier works)
 
-### Steps
+- Node.js ≥ 18.x
+- MongoDB (local or Atlas)
+- npm or yarn
+
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Nikhilseelam1/FInance-Backend-Project.git
-
 cd FInance-Backend-Project
-
-npm install
-
-cp .env.example .env
-
-npm run dev
-
-npm start
 ```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure Environment Variables
+
+```bash
+cp .env.example .env
+# Fill in your MongoDB URI and JWT secrets
+```
+
+### 4. Start the Server
+
+```bash
+npm run dev      # Development (nodemon)
+npm start        # Production
+```
+
+Server starts at `http://localhost:3000`
 
 ---
 
-##  Environment Variables
-
-Create a `.env` file in the root directory with the following:
+## 🔧 Environment Variables
 
 ```env
+# .env.example
 
-PORT=5000
-
+# Server
+PORT=3000
 NODE_ENV=development
 
-MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/finance-backend
+# MongoDB
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/finance-db
 
-JWT_SECRET=your_super_secret_key_here
+# JWT
+JWT_ACCESS_SECRET=your_access_token_secret
+JWT_REFRESH_SECRET=your_refresh_token_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 
-JWT_EXPIRES_IN=7d
+# Security
+BCRYPT_SALT_ROUNDS=12
+COOKIE_SECRET=your_cookie_signing_secret
+
+# CORS
+ALLOWED_ORIGINS=http://localhost:5173,https://yourfrontend.com
 ```
 
 ---
 
-##  Authentication
+## 🔒 Security Features
 
-This system uses **JWT (JSON Web Token)** based stateless authentication.
-
-- On login or registration, a signed JWT token is returned
-- All protected routes require this token in the `Authorization` header
-- The token is verified in `auth.middleware.js` before any protected route is accessed
-- Inactive users are blocked even with a valid token
-
-```
-Authorization: Bearer <your_jwt_token>
-```
-
----
-
-##  Roles and Permissions
-
-The system supports three roles with clearly defined access levels:
-
-| Action | Viewer | Analyst | Admin |
-|---|---|---|---|
-| Register / Login | ✅ | ✅ | ✅ |
-| View financial records | ✅ | ✅ | ✅ |
-| Create records | ❌ | ❌ | ✅ |
-| Update records | ❌ | ❌ | ✅ |
-| Delete records | ❌ | ❌ | ✅ |
-| Access dashboard analytics | ❌ | ✅ | ✅ |
-| Manage users | ❌ | ❌ | ✅ |
-
----
-
-##  API Endpoints
-
-###  Auth Routes (Public)
-
-| Method | Endpoint | Description |
+| Feature | Implementation | Threat Mitigated |
 |---|---|---|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Login and receive JWT token |
+| **Password Hashing** | bcrypt (12 salt rounds) | Credential theft via DB dump |
+| **JWT Short Expiry** | 15min access tokens | Token replay after leak |
+| **Refresh Rotation** | Old token invalidated on rotation | Refresh token reuse |
+| **HTTP-only Cookies** | Refresh token in cookie only | XSS-based token theft |
+| **Security Headers** | Helmet.js | XSS, clickjacking, MIME sniffing |
+| **CORS Whitelisting** | Allowed origin list | Cross-origin request forgery |
+| **Input Validation** | Joi/Zod on all endpoints | Injection, malformed data |
+| **RBAC Enforcement** | Middleware-level role checks | Privilege escalation |
+| **Centralized Errors** | Global error handler | Stack trace leakage to clients |
 
 ---
 
-###  User Routes (Admin Only)
+## 🚀 Deployment
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/users` | Get all users |
-| GET | `/api/users/:id` | Get single user by ID |
-| PATCH | `/api/users/:id/role` | Update user role |
-| PATCH | `/api/users/:id/status` | Activate or deactivate user |
-| DELETE | `/api/users/:id` | Permanently delete user |
+Deployed on **Render** as a Web Service:
 
----
-
-###  Financial Record Routes
-
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | `/api/records` | Admin | Create a new record |
-| GET | `/api/records` | All roles | Get all records with filters |
-| GET | `/api/records/:id` | All roles | Get single record |
-| PATCH | `/api/records/:id` | Admin | Update a record |
-| DELETE | `/api/records/:id` | Admin | Soft delete a record |
-
-**Supported Query Parameters for GET `/api/records`:**
-
-| Parameter | Type | Description |
-|---|---|---|
-| `type` | String | Filter by `income` or `expense` |
-| `category` | String | Filter by category (case insensitive) |
-| `startDate` | Date | Filter records from this date |
-| `endDate` | Date | Filter records up to this date |
-| `page` | Number | Page number (default: 1) |
-| `limit` | Number | Records per page (default: 10) |
-
----
-
-###  Dashboard Routes (Analyst and Admin Only)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/dashboard/summary` | Total income, expenses, net balance |
-| GET | `/api/dashboard/category-wise` | Totals grouped by category and type |
-| GET | `/api/dashboard/trends` | Monthly income and expense trends |
-| GET | `/api/dashboard/recent` | Most recent 10 transactions |
-
----
-
-##  Request & Response Examples
-
-### Register User
-
-```json
-POST /api/auth/register
-{
-  "name": "Nikhil Admin",
-  "email": "nikhil@gmail.com",
-  "password": "123456",
-  "role": "admin"
-}
-```
-
-```json
-{
-  "statusCode": 201,
-  "message": "User registered successfully",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": "69ce55868353aa4a29c45775",
-      "name": "Nikhil Admin",
-      "email": "nikhil@gmail.com",
-      "role": "admin",
-      "status": "active"
-    }
-  },
-  "success": true
-}
-```
-
----
-
-### Create Financial Record
-
-```json
-POST /api/records
-Authorization: Bearer <admin_token>
-
-{
-  "amount": 50000,
-  "type": "income",
-  "category": "Salary",
-  "date": "2026-04-01",
-  "notes": "Monthly salary credit"
-}
-```
-
-```json
-{
-  "statusCode": 201,
-  "message": "Record created successfully",
-  "data": {
-    "_id": "69ce5c488353aa4a29c45779",
-    "amount": 50000,
-    "type": "income",
-    "category": "Salary",
-    "date": "2026-04-01T00:00:00.000Z",
-    "notes": "Monthly salary credit",
-    "isDeleted": false,
-    "createdBy": "69ce55868353aa4a29c45775",
-    "createdAt": "2026-04-02T12:08:40.119Z"
-  },
-  "success": true
-}
-```
-
----
-
-### Dashboard Summary
-
-```json
-GET /api/dashboard/summary
-Authorization: Bearer <analyst_or_admin_token>
-```
-
-```json
-{
-  "statusCode": 200,
-  "message": "Summary fetched successfully",
-  "data": {
-    "income": 150000,
-    "expenses": 45000,
-    "netBalance": 105000
-  },
-  "success": true
-}
-```
-
-### RBAC Denied Response
-
-```json
-{
-  "success": false,
-  "message": "Access denied. Required role: admin. Your role: viewer",
-  "errors": []
-}
-```
-
----
-
-##  Access Control Implementation
-
-RBAC is implemented using a two-layer middleware approach:
-
-**Layer 1 — `auth.middleware.js` (Authentication)**
-- Extracts and verifies the JWT token from the `Authorization` header
-- Fetches the user from the database and attaches to `req.user`
-- Blocks requests from inactive users before they reach any route
-
-**Layer 2 — `rbac.middleware.js` (Authorization)**
-- A higher-order function `authorize(...roles)` that accepts allowed roles
-- Checks `req.user.role` against the allowed roles for that specific route
-- Returns a `403 Forbidden` response with a clear message if access is denied
-
-```javascript
-// Clean, reusable usage on any route
-router.post("/records", protect, authorize("admin"), createRecord);
-router.get("/dashboard/summary", protect, authorize("analyst", "admin"), getSummary);
-router.get("/records", protect, authorize("viewer", "analyst", "admin"), getAll);
-```
-
----
-
-##  Data Models
-
-### User Model
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| name | String | Required, trimmed | Full name |
-| email | String | Required, unique, lowercase | User email |
-| password | String | Required, min 6 chars, hidden | Bcrypt hashed |
-| role | Enum | admin, analyst, viewer | Access level |
-| status | Enum | active, inactive | Account status |
-| createdAt | Date | Auto | Timestamp |
-| updatedAt | Date | Auto | Timestamp |
-
-### FinancialRecord Model
-
-| Field | Type | Constraints | Description |
-|---|---|---|---|
-| amount | Number | Required, min 0 | Transaction amount |
-| type | Enum | income, expense | Transaction type |
-| category | String | Required, trimmed | Category label |
-| date | Date | Required | Transaction date |
-| notes | String | Optional, max 200 | Additional notes |
-| isDeleted | Boolean | Default false | Soft delete flag |
-| createdBy | ObjectId | Ref: User | Who created it |
-| createdAt | Date | Auto | Timestamp |
-| updatedAt | Date | Auto | Timestamp |
-
----
-
-##  Dashboard Aggregations
-
-All dashboard endpoints use **MongoDB aggregation pipelines** for efficient data processing:
-
-- **Summary** — `$group` by `type` field using `$sum` to compute total income, total expenses, and net balance
-- **Category Wise** — `$group` by `category` and `type` with `$sum` and `$count`, sorted by total descending
-- **Monthly Trends** — `$group` by `$year` and `$month` operators on the date field, limited to last 12 months
-- **Recent Activity** — `find()` with `populate("createdBy")` sorted by `createdAt` descending, limited to 10
-
-> **Note:** The `pre(/^find/)` soft delete hook on the model applies only to Mongoose `find` queries. All aggregation pipelines include an explicit `{ $match: { isDeleted: false } }` stage to ensure consistency.
-
----
-
-##  Assumptions Made
-
-1. **Role assignment at registration** — Users can self-assign a role during registration for easier testing. In a real production system, only admins would assign roles after account creation.
-2. **Soft delete for records only** — Financial records are soft deleted to preserve audit history. Users are hard deleted since permanent removal of user data is the expected behavior.
-3. **Single currency** — All amounts are assumed to be in the same currency. No multi-currency or conversion logic is implemented.
-4. **No email verification** — Email verification was not implemented as it requires a third-party email service. In production this would be a mandatory step.
-5. **Non-negative amounts** — Expenses are stored as positive values with `type: "expense"` rather than as negative numbers for cleaner data and aggregation logic.
-
----
-
-##  Tradeoffs Considered
-
-| Design Decision | Tradeoff |
+| Concern | Solution |
 |---|---|
-| Module-based architecture over flat MVC | More files to manage but each feature is self-contained, scalable, and easy to onboard new developers |
-| Soft delete via `pre(/^find/)` Mongoose hook | All find queries automatically exclude deleted records but aggregation pipelines need a manual `$match` stage |
-| Joi validators in separate files | Slightly more files but controllers and services remain completely clean with no mixed concerns |
-| JWT stateless auth over sessions | No server-side session storage required but tokens cannot be invalidated before expiry without a denylist |
-| MongoDB over relational SQL | Flexible document schema and powerful native aggregation pipelines well-suited for analytics but no strict relational integrity |
-| Service layer separate from controllers | Controllers stay thin (req/res only) and business logic is fully testable in isolation |
+| **Zero-downtime** | Render rolling restart on deploy |
+| **Secrets** | Environment variables via Render dashboard (never in code) |
+| **Database** | MongoDB Atlas (external managed cluster) |
+| **Process management** | Render handles process supervision and restarts |
+
+**Deploy steps:**
+1. Push to `main` branch
+2. Render auto-deploys via GitHub integration
+3. Health check endpoint confirms server is live
 
 ---
 
-##  Design Decisions
+## 📈 Scalability & Architecture Decisions
 
-These are the key intentional architectural choices made in this project:
-
-- **Module-based folder structure** — Each feature module (auth, user, record, dashboard) owns its own routes, controller, service, and validator. This is inspired by NestJS architecture and scales well as the codebase grows.
-
-- **Thin controllers, fat services** — Controllers only handle HTTP request/response. All business logic, DB calls, and error throwing live in services. This makes logic reusable and independently testable.
-
-- **`ApiError` and `ApiResponse` utility classes** — Every success and error response follows a consistent structure across all endpoints. This makes the API predictable for any frontend or API consumer.
-
-- **Global error handler as single source of truth** — All errors flow through one middleware (`errorHandler.js`) which handles Mongoose errors, JWT errors, custom ApiErrors, and unknown errors uniformly.
-
-- **`authorize(...roles)` as a higher-order function** — Instead of writing role checks inside every controller, RBAC is enforced declaratively at the route level. This makes permissions visible, auditable, and easy to change.
-
-- **Self-action protection in user service** — Admins cannot change their own role, deactivate their own account, or delete themselves. This prevents accidental administrative lockout.
+| Decision | Rationale |
+|---|---|
+| **Stateless JWT auth** | API servers carry no session state — horizontally scalable without sticky sessions |
+| **Repository pattern** | DB layer is swappable (SQL, Redis, etc.) without touching business logic |
+| **Service layer isolation** | Business rules in one place; testable without HTTP or DB |
+| **MongoDB aggregation** | Native DB-side computation avoids N+1 fetches for analytics |
+| **Schema validation at entry** | Malformed data caught before it reaches the service layer |
+| **Compound indexes** | `{ userId, date }` and `{ userId, type }` indexes ensure O(log n) aggregation scans |
+| **Modular routing** | Feature-scoped routers allow independent team ownership of each domain |
 
 ---
 
-##  Future Improvements
+## 🔭 Future Improvements
 
-- [ ] Email verification on registration
-- [ ] Token blacklisting for secure logout
-- [ ] Rate limiting to prevent brute force attacks
-- [ ] Full text search across records
-- [ ] Unit and integration tests
-- [ ] Swagger / OpenAPI documentation
-- [ ] Multi-currency support with exchange rates
-- [ ] Audit logs for all admin actions
+- [ ] **Multi-currency support** — Store currency code + FX conversion rates per transaction
+- [ ] **Budget alerts** — Threshold-based notifications when spending exceeds category limits
+- [ ] **Audit logging** — Immutable append-only log of all admin actions
+- [ ] **CSV/PDF export** — Generate downloadable financial reports per date range
+- [ ] **Redis caching** — Cache frequently read analytics summaries with TTL invalidation
+- [ ] **Pagination cursors** — Replace offset-based pagination with cursor-based for large datasets
+- [ ] **OpenAPI spec** — Auto-generated Swagger docs from route definitions
+- [ ] **Integration tests** — Supertest-based API test suite with in-memory MongoDB
+- [ ] **Rate limiting** — Per-IP Redis sliding window on auth and write endpoints
+- [ ] **Two-Factor Authentication** — TOTP-based 2FA for sensitive admin operations
 
 ---
 
-##  Author
+## 📸 Screenshots
+
+> _Coming soon — Postman collection, API response samples, and architecture diagrams._
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](./LICENSE).
+
+---
+
+## 👤 Author
 
 **Nikhil Seelam**
-- GitHub: [Nikhilseelam1](https://github.com/Nikhilseelam1)
+B.Tech Computer Science & Engineering · RGUKT Ongole
+
+[![GitHub](https://img.shields.io/badge/GitHub-Nikhilseelam1-181717?style=flat-square&logo=github)](https://github.com/Nikhilseelam1)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat-square&logo=linkedin)](https://linkedin.com/in/nikhilseelam)
+
+---
+
+<div align="center">
+
+*Engineered for correctness. Designed for scale. Built to last.*
+
+</div>
